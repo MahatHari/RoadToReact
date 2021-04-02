@@ -1,5 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
+
+//Creating semi Persistent Custom hooks
+// making is re-usable with general value and setValue parameters
+const useSemiPersistentState = (key, initialState) => {
+  const [value, setValue] = useState(localStorage.getItem(key) || initialState);
+
+  useEffect(() => {
+    localStorage.setItem(key, value);
+  }, [value, key]);
+  return [value, setValue];
+};
 
 const App = () => {
   const stories = [
@@ -27,14 +38,20 @@ const App = () => {
   // starts with correct initial value, using the searchTerm
   // from reat State,
   // Using local storage for last search if there is, if not our default
-  const [searchTerm, setSearchTerm] = useState(
-    localStorage.getItem('search' || 'React')
-  );
-  // Call back function passed as props to Search Component
+  const [searchTerm, setSearchTerm] = useSemiPersistentState('search', 'React');
+
+  // // Using React's useEffect to trigger the side-effect each time
+  // // the searchTerm changes
+  // useEffect(() => {
+  //   localStorage.setItem('search', searchTerm);
+  // }, [searchTerm]);
+  // // Call back function passed as props to Search Component
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
-    //setting local Storage for searchTerm
+    /* //setting local Storage for searchTerm
     localStorage.setItem('search', event.target.value);
+    Used Reacts sideEffect Hook to do this
+    */
   };
   const searchedStories = stories.filter((story) =>
     story.title.toLowerCase().includes(searchTerm.toLowerCase())
