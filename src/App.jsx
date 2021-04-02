@@ -1,17 +1,6 @@
+import { useState } from 'react';
 import './App.css';
 
-const List = ({ list }) => {
-  return list.map((item) => {
-    return (
-      <div key={item.objectId}>
-        <a href={item.url}>{item.title}</a>
-        <span>{item.author}</span>
-        <span>{item.num_comments}</span>
-        <span>{item.points}</span>
-      </div>
-    );
-  });
-};
 const App = () => {
   const stories = [
     {
@@ -31,19 +20,55 @@ const App = () => {
       objectId: 1,
     },
   ];
-  const handleChange = (event) => {
+
+  // Call back function passed as props to Search Component
+  const handleSearch = (event) => {
     console.log(event.target.value);
   };
+
   return (
     <div>
-      <h1>Hello World</h1>
+      <h1>My Hacker Stories</h1>
 
-      <label hrmlFor='search'>Search:</label>
-      <input id='search' type='text' onChange={handleChange}></input>
+      <Search onSearch={handleSearch} />
+      <hr />
 
-      <List list={stories}></List>
+      <List list={stories} />
     </div>
   );
+};
+
+// creating Search Component
+const Search = (props) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const handleChange = (event) => {
+    setSearchTerm(event.target.value);
+    props.onSearch(event);
+  };
+  return (
+    <>
+      <label hrmlFor='search'>Search:</label>
+      <input id='search' type='text' onChange={handleChange}></input>
+      <p>
+        Searching for <strong>{searchTerm}</strong>
+      </p>
+    </>
+  );
+};
+
+//List Component
+const List = ({ list }) => {
+  return list.map((item) => {
+    return (
+      <div key={item.objectId}>
+        <a href={item.url}>{item.title}</a>
+        <span>{item.author}</span>
+        <span>{item.num_comments}</span>
+        <span>{item.points}</span>
+      </div>
+    );
+  });
 };
 
 export default App;
