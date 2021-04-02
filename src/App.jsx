@@ -26,10 +26,15 @@ const App = () => {
   // by using controlled component, input field
   // starts with correct initial value, using the searchTerm
   // from reat State,
-  const [searchTerm, setSearchTerm] = useState('React');
+  // Using local storage for last search if there is, if not our default
+  const [searchTerm, setSearchTerm] = useState(
+    localStorage.getItem('search' || 'React')
+  );
   // Call back function passed as props to Search Component
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
+    //setting local Storage for searchTerm
+    localStorage.setItem('search', event.target.value);
   };
   const searchedStories = stories.filter((story) =>
     story.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -78,7 +83,9 @@ const List = ({ list }) => {
   }); */
   // Vartion 2: Spread and Rest Operators
   // 2.Iterations
-  return list.map((item) => <Item key={item.id} {...item} />);
+  // Variations 2: Spread and Rest operartors final
+  // here in {objectId, ...item} => ...item means rest operator
+  return list.map(({ objectId, ...item }) => <Item key={objectId} {...item} />);
 };
 
 // Extracting a New Item component to simplify List component
