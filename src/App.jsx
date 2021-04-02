@@ -61,7 +61,13 @@ const App = () => {
     <div>
       <h1>My Hacker Stories</h1>
 
-      <Search onSearch={handleSearch} search={searchTerm} />
+      {/* <Search onSearch={handleSearch} search={searchTerm} /> */}
+      <InputWithLable
+        id='search'
+        label='Search'
+        value={searchTerm}
+        onInputChanage={handleSearch}
+      />
       <hr />
 
       <List list={searchedStories} />
@@ -71,6 +77,7 @@ const App = () => {
 
 // creating Search Component
 // 1. Props are destructured
+// The seacrh Component is generalised as InputWith Label
 const Search = ({ search, onSearch }) => {
   return (
     <>
@@ -84,6 +91,23 @@ const Search = ({ search, onSearch }) => {
     </>
   );
 };
+
+// Generalizing the above search component to re usaual general
+// Input component with Lable
+
+const InputWithLable = ({
+  id,
+  label,
+  type = 'text',
+  value,
+  onInputChanage,
+}) => (
+  <>
+    <label htmlFor={id}>{label}</label>
+    &nbsp;
+    <input id={id} type={type} value={value} onChange={onInputChanage} />
+  </>
+);
 
 //List Component
 const List = ({ list }) => {
