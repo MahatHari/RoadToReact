@@ -5,46 +5,87 @@ const initialTodos = [
   {
     id: uuid(),
     task: 'Learn React',
-    complete: 'true',
+    complete: true,
   },
   {
     id: uuid(),
     task: 'Learn Firebase',
-    complete: 'true',
+    complete: true,
   },
   {
     id: uuid(),
     task: 'Learn GraphQL',
-    complete: 'false',
+    complete: false,
   },
   {
     id: uuid(),
     task: 'Learn  Node',
-    complete: 'false',
+    complete: false,
   },
   {
     id: uuid(),
     task: 'Learn Appolo Client',
-    complete: 'false',
+    complete: false,
   },
 ];
 
 const StateHooks = () => {
-  const [todos, setTodos] = useState(initialTodos);
+  /* const [todos, setTodos] = useState(initialTodos); */
+  // Using Reducer hook in complex state objects
+  // toggle todo item to complete
+  // toggle todo item to incomplete
+  // add todo item to the list of todo items
+  const todoReducer = (state, action) => {
+    switch (action.type) {
+      case 'DO_TODO':
+        return state.map((todo) => {
+          if (todo.id === action.id) {
+            return { ...todo, complete: true };
+          } else {
+            return todo;
+          }
+        });
+      case 'UNDO_TODO':
+        return state.map((todo) => {
+          if (todo.id === action.id) {
+            return { ...todo, complete: false };
+          } else {
+            return todo;
+          }
+        });
+      case 'ADD_TODO':
+        return state.concat({
+          task: action.task,
+          id: action.id,
+          complete: false,
+        });
+      default:
+        throw new Error();
+    }
+  };
+  const [todos, dispatchTodos] = useReducer(todoReducer, initialTodos);
   const [task, setTask] = useState('');
 
   const handleInputChange = (event) => {
     setTask(event.target.value);
   };
   const handleSubmit = (event) => {
-    if (task) {
+    /* if (task) {
       setTodos(todos.concat({ id: uuid(), task, complete: false }));
+    } */
+    //using Reducer
+    if (task) {
+      dispatchTodos({
+        type: 'ADD_TODO',
+        task,
+        id: uuid(),
+      });
     }
     setTask('');
     event.preventDefault();
   };
-  const handleCheckboxChange = (id) => {
-    setTodos(
+  const handleCheckboxChange = (todo) => {
+    /*  setTodos(
       todos.map((todo) => {
         if (todo.id === id) {
           return { ...todo, complete: !todo.complete };
@@ -52,7 +93,12 @@ const StateHooks = () => {
           return todo;
         }
       })
-    );
+    ); */
+    // using Reducer
+    dispatchTodos({
+      type: todo.complete ? 'UNDO_TODO' : 'DO_TODO',
+      id: todo.id,
+    });
   };
 
   // Filtering Todos
@@ -123,7 +169,7 @@ const StateHooks = () => {
                 name=''
                 id=''
                 checked={todo.complete}
-                onChange={() => handleCheckboxChange(todo.id)}
+                onChange={() => handleCheckboxChange(todo)}
               />
               {todo.task}
             </label>
