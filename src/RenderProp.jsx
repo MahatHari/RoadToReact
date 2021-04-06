@@ -1,18 +1,22 @@
-import React, { useState } from 'react';
+import React, { Children, useState } from 'react';
 
 export default function RenderProps() {
   return (
     <div>
       <h1>Dollor to Euro </h1>
-      <Amount render={(amount) => <Euro amount={amount} />} />
-
+      <Amount renderFunction={(amount) => <Euro amount={amount} />} />
       <h1> Dollar to Pound</h1>
-      <Amount render={(amount) => <Pound amount={amount} />} />
+      <Amount renderFunction={(amount) => <Pound amount={amount} />} />
+      {/* Above can be refactored as having the children as function */}
+      {/*   <h1>Dollor to Euro </h1>
+      <Amount> {(amount) => <Euro amount={amount} />}</Amount>
+      <h1> Dollar to Pound</h1>
+      <Amount>{(amount) => <Pound amount={amount} />} </Amount> */}
     </div>
   );
 }
 
-const Amount = ({ render }) => {
+const Amount = ({ renderFunction }) => {
   const [amount, setAmount] = useState(0);
 
   const onIncrement = () => setAmount(amount + 1);
@@ -27,7 +31,10 @@ const Amount = ({ render }) => {
         -
       </button>
       <p>US Dollar: {amount}</p>
-      {render(amount)}
+      {/* renderFunction is a javascript function that renders another component
+           Here Render takes amount and pases it to Euro/Pound component as props
+          */}
+      {renderFunction(amount)}
     </div>
   );
 };
