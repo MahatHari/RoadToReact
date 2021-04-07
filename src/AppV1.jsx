@@ -6,6 +6,8 @@ import React, {
   useCallback,
 } from 'react';
 import axios from 'axios';
+import './App.css';
+import { sortBy } from 'lodash';
 
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
 
@@ -61,14 +63,25 @@ const App = () => {
     isLoading: false,
     isError: false,
   });
-  const [url, setUrl] = useState(`${API_ENDPOINT}${searchTerm}`);
+  const [urls, setUrls] = useState([`${API_ENDPOINT}${searchTerm}`]);
 
   const handleSearchInput = (event) => {
     setSearchTerm(event.target.value);
   };
   const handleSearchSubmit = () => {
-    setUrl(`${API_ENDPOINT}${searchTerm}`);
+    const url = `${API_ENDPOINT}${searchTerm}`;
+    setUrls(urls.concat(url));
   };
+  const extractSearchTerm = (url) => url.replace(API_ENDPOINT, '');
+  const getLastSearches = (urls) =>
+    urls.slice(-5).map((url) => extractSearchTerm(url));
+  const handleLastSearch = (searchTerm) => {
+    const url = `${API_ENDPOINT}${searchTerm}`;
+    setUrls(urls.concat(url));
+  }; //TODO:
+
+  const lastSearches = getLastSearches(urls);
+
   /* // Data fetching logic to a stand alone function outise side effect
   const handleFetchStories = useCallback(() => {
     dispatchStories({ type: 'STORIES_FETCH_INIT' });
@@ -91,7 +104,8 @@ const App = () => {
   const handleFetchStories = useCallback(async () => {
     dispatchStories({ type: 'STORIES_FETCH_INIT' });
     try {
-      const result = await axios.get(url);
+      const lastUrl = urls[urls.length - 1];
+      const result = await axios.get(lastUrl);
 
       dispatchStories({
         type: 'STORIES_FETCH_SUCCESS',
@@ -102,7 +116,7 @@ const App = () => {
         type: 'STORIES_FETCH_FAILURE',
       });
     }
-  }, [url]);
+  }, [urls]);
 
   // using useCallback() in useEffect
   useEffect(() => {
@@ -144,8 +158,8 @@ const App = () => {
   ); */
 
   return (
-    <div>
-      <h1>My Hacker Stories</h1>
+    <div className='container'>
+      <h1 className='headline-primary'>My Hacker Stories</h1>
       <InputWithLabel
         id='search'
         value={searchTerm}
@@ -154,9 +168,23 @@ const App = () => {
       >
         <strong>Search: </strong>
       </InputWithLabel>
-      <button type='button' disabled={!searchTerm} onClick={handleSearchSubmit}>
+      <button
+        type='button'
+        className='button button_large'
+        disabled={!searchTerm}
+        onClick={handleSearchSubmit}
+      >
         Submit
       </button>
+      {lastSearches.map((searchTerm) => (
+        <button
+          key={searchTerm}
+          type='button'
+          onClick={() => handleLastSearch(searchTerm)}
+        >
+          {searchTerm}
+        </button>
+      ))}
 
       <hr />
 
@@ -188,7 +216,9 @@ const InputWithLabel = ({
   }, [isFocused]);
   return (
     <>
-      <label htmlFor={id}>{children}</label>
+      <label htmlFor={id} className='label'>
+        {children}
+      </label>
       &nbsp;
       <input
         ref={inputRef}
@@ -196,26 +226,124 @@ const InputWithLabel = ({
         id={id}
         value={value}
         onChange={onInputChange}
+        className='input'
       />
     </>
   );
 };
 
-const List = ({ list, onRemoveItem }) =>
-  list.map((item) => (
-    <Item key={item.objectID} item={item} onRemoveItem={onRemoveItem}></Item>
-  ));
+// Sorting Object Dictionary
+const SORTS = {
+  NONE: (list) => list,
+  TITLE: (list) => sortBy(list, 'title'),
+  AUTHOR: (list) => sortBy(list, 'author'),
+  COMMENTS: (list) => sortBy(list, 'num_comments'),
+  POINTS: (list) => sortBy(list, 'points').reverse(),
+};
+
+const List = ({ list, onRemoveItem }) => {
+  const [sort, setSort] = useState({ sortKey: 'NONE', isReverse: false });
+  const handleSort = (sortKey) => {
+    const isReverse = sort.sortKey === sortKey && !sort.isReverse;
+    setSort({ sortKey: sortKey, isReverse: isReverse });
+  };
+  const sortFunction = SORTS[sort.sortKey];
+  // Sorting with reverse
+  const sortedList = sort.isReverse
+    ? sortFunction(list).reverse()
+    : sortFunction(list);
+  return (
+    <div>
+      <div
+        style={{
+          display: 'flex',
+          textAlign: 'left',
+          flexDirection: 'row',
+          justifyItems: 'center',
+        }}
+      >
+        <span
+          style={{
+            width: '40%',
+            textAlign: 'left',
+            padding: '5px',
+            fontSize: '24px',
+          }}
+        >
+          <button type='buttton' onClick={() => handleSort('TITLE')}>
+            Title
+          </button>
+        </span>
+        <span
+          style={{
+            width: '30%',
+            textAlign: 'left',
+            padding: '5px',
+            fontSize: '24px',
+          }}
+        >
+          <button type='buttton' onClick={() => handleSort('AUTHOR')}>
+            Author
+          </button>
+        </span>
+        <span
+          style={{
+            width: '10%',
+            textAlign: 'left',
+            padding: '5px',
+            fontSize: '24px',
+          }}
+        >
+          <button type='buttton' onClick={() => handleSort('COMMENTS')}>
+            Comments
+          </button>
+        </span>
+        <span
+          style={{
+            width: '10%',
+            textAlign: 'left',
+            padding: '5px',
+            fontSize: '24px',
+          }}
+        >
+          <button type='buttton' onClick={() => handleSort('POINTS')}>
+            Points
+          </button>
+        </span>
+        <span
+          style={{
+            width: '10%',
+            textAlign: 'left',
+            padding: '5px',
+            fontSize: '24px',
+          }}
+        >
+          Actions
+        </span>
+      </div>
+      {sortedList.map((item) => (
+        <Item
+          key={item.objectID}
+          item={item}
+          onRemoveItem={onRemoveItem}
+        ></Item>
+      ))}
+    </div>
+  );
+};
 
 const Item = ({ item, onRemoveItem }) => (
-  <div>
-    <span>
+  <div className='item'>
+    <span style={{ width: '40%' }}>
       <a href={item.url}>{item.title}</a>
     </span>
-    <span>{item.author}</span>
-    <span> {item.num_comments} </span>
-    <span> {item.points} </span>
-    <span>
-      <button onClick={() => onRemoveItem(item)}>Dismiss</button>
+    <span style={{ width: '30%' }}>{item.author}</span>
+    <span style={{ width: '10%' }}> {item.num_comments} </span>
+    <span style={{ width: '10%' }}> {item.points} </span>
+    <span style={{ width: '10%' }}>
+      <button className='button' onClick={() => onRemoveItem(item)}>
+        Dismiss
+      </button>
     </span>
   </div>
 );
